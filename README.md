@@ -1,52 +1,65 @@
+# Entrega Sabesp — Download de fotos e linkagem
 
-  ENTREGA SABESP - baixar fotos e gerar linkagem
+Ferramenta que lê planilhas de cadastro, baixa as fotos a partir dos links e
+gera uma pasta de entrega com as imagens + uma planilha de linkagem
+(`linkagem_fotos.xlsx`) que referencia cada foto ao código do cadastro e ao
+tipo da foto, usando links locais (relativos) — sem depender de links externos.
 
+## ⚠️ Aviso de LGPD (leia antes de usar ou publicar)
 
-O QUE ESTE PROJETO FAZ
-----------------------
-Le as planilhas que voce colocar na pasta "input", baixa TODAS as fotos
-dos links e gera, na pasta "output", uma pasta por planilha contendo:
-  - fotos/              -> todas as imagens (nomeadas por codigo + tipo da foto)
-  - linkagem_fotos.xlsx -> uma linha por foto, ligando o arquivo ao codigo e
-                           ao tipo, com um link que abre a foto da propria pasta
-  - fotos_com_erro.csv  -> (so se algo falhar) lista o que nao baixou
+Este repositório contém **apenas código**. Ele processa **dados pessoais e
+dados pessoais sensíveis** (nome, CPF, RG, CNPJ, endereço, fotos de documentos).
+Por isso:
 
-No fim e so zipar a pasta de output daquela planilha e enviar pra Sabesp.
-Como os links sao relativos (apontam pra pasta "fotos"), nao depende de
-internet nem de link externo.
+- **Nunca** faça commit de planilhas com dados reais, fotos, arquivos da pasta
+  `output/`, `input/` ou qualquer `.csv`/`.zip` gerado. O `.gitignore` já
+  bloqueia isso — não remova essas regras.
+- Use preferencialmente um **repositório privado**. Dados pessoais não devem
+  ficar públicos.
+- Trate as planilhas e fotos sob os princípios da LGPD: **finalidade**
+  (uso exclusivo para a entrega contratada à Sabesp), **necessidade/minimização**
+  (baixe só o necessário) e **segurança** (armazene em local restrito, com
+  acesso controlado).
+- Ao final do uso/retenção, **elimine** os dados locais (pasta `output/`,
+  planilhas e fotos) conforme a política de retenção acordada.
+- Se algum dado real já tiver sido commitado por engano, ele permanece no
+  histórico do Git — será preciso **limpar o histórico** (ex.: `git filter-repo`)
+  e, se já foi enviado, considerar o dado como exposto.
 
-PASSO A PASSO
--------------
-1. Instale o Python 3 (se ainda nao tiver): https://www.python.org/downloads/
-   Na instalacao, marque a opcao "Add Python to PATH".
+> O `template_planilha.xlsx` versionado contém **apenas os cabeçalhos** (linha 1),
+> sem nenhum dado pessoal.
 
-2. Abra o Prompt de Comando (CMD) nesta pasta e instale as dependencias:
-       pip install openpyxl requests
+## Como funciona
 
-3. Coloque a(s) planilha(s) .xlsx dentro da pasta "input".
-   (Elas devem seguir os cabecalhos do arquivo template_planilha.xlsx.)
+1. Coloque a(s) planilha(s) `.xlsx` na pasta `input/` (seguindo os cabeçalhos
+   do `template_planilha.xlsx`).
+2. Rode o script.
+3. Para cada planilha, é criada em `output/<nome-da-planilha>/`:
+   - `fotos/` — todas as imagens, nomeadas por `codigo__tipo-da-foto`
+   - `linkagem_fotos.xlsx` — uma linha por foto, com link clicável relativo
+   - `fotos_com_erro.csv` — (se houver) fotos que não existem no servidor
+   - `faltas_por_codigo.xlsx` — (se houver) faltas agrupadas por código interno
 
-4. Rode:
-       python entrega_sabesp.py
+## Requisitos
 
-5. Aguarde. Sao muitas fotos (~20 mil na planilha de exemplo), entao demora.
-   Pode fechar e rodar de novo depois: ele PULA o que ja baixou e continua
-   de onde parou.
+- Python 3.9+
+- Instale as dependências:
 
-6. Veja o resultado na pasta "output".
+```bash
+pip install -r requirements.txt
+```
 
-OBSERVACOES
------------
-- Rode na sua maquina / rede, que tem acesso aos links das fotos.
-- O codigo acha as colunas pelo NOME do cabecalho (nao pela letra), entao a
-  ordem das colunas pode variar, desde que os cabecalhos sejam os mesmos do
-  template.
-- Se algum cabecalho de foto nao for encontrado, ele avisa no terminal.
+## Uso
 
-ESTRUTURA DA PASTA
-------------------
-  entrega_sabesp.py        -> o programa
-  template_planilha.xlsx   -> modelo vazio (so cabecalhos) pra guiar
-  input/                   -> planilhas entram aqui
-  output/                  -> resultados saem aqui
-  LEIA-ME.txt              -> este arquivo
+```bash
+python entrega_sabesp.py
+```
+
+O script identifica as colunas **pelo nome do cabeçalho** (não pela letra) e
+pode ser interrompido e retomado — ele **pula o que já foi baixado**.
+
+## Observações técnicas
+
+- Uma mesma célula pode conter **várias fotos** (separadas por quebra de linha);
+  o script separa e baixa cada uma.
+- Execute em uma rede com acesso ao servidor de imagens.
